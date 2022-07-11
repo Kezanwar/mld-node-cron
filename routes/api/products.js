@@ -33,7 +33,7 @@ router.get('/getProducts', async (req, res) => {
     // })
 
     await _redis.set('products', JSON.stringify(allProducts))
-    res.send('success')
+    res.send(200)
   } catch (error) {
     console.log(error.response.data)
   }
@@ -46,7 +46,7 @@ router.get('/getProducts', async (req, res) => {
 router.get('/redis/products', async (req, res) => {
   try {
     const products = await _redis.get('products')
-    res.json(products)
+    res.json(JSON.parse(products))
   } catch (error) {
     console.log(error.response)
   }
@@ -73,7 +73,21 @@ router.get('/getCategories', async (req, res) => {
 router.get('/redis/categories', async (req, res) => {
   try {
     const categories = await _redis.get('categories')
-    res.json(categories)
+    res.json(JSON.parse(categories))
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
+// route GET api/createProdsByCats
+// @desc creates and stores a list of each category of products
+// @access public
+
+router.get('/createProdsByCats', async (req, res) => {
+  try {
+    const products = await _redis.get('products')
+    const categories = await _redis.get('products')
+    res.send(200)
   } catch (error) {
     console.log(error.response)
   }
