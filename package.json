@@ -1,0 +1,24 @@
+{
+  "name": "mld-node-cron",
+  "version": "1.0.0",
+  "description": "Cron server for updating a cached redis store of MLD products from the dokan / woocommerce databse. Providing MLD's React Native app easy access to the products.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server",
+    "server": "nodemon server"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@woocommerce/woocommerce-rest-api": "^1.0.1",
+    "axios": "^0.27.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "node-cron": "^3.0.1",
+    "redis": "^4.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
