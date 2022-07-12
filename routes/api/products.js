@@ -79,6 +79,49 @@ router.get('/redis/categories', async (req, res) => {
   }
 })
 
+// route GET api/getTags
+// @desc gets tags from WC and stores them in redis
+// @access public
+
+router.get('/getTags', async (req, res) => {
+  try {
+    let allTags = []
+    let breakLoop = false
+    let page = 1
+
+    while (!breakLoop) {
+      console.log(page)
+      const tags = await _wc
+        .get('products/tags', { per_page: 100, page: page })
+        .then((res) => res?.data)
+        .catch((err) => console.log(err?.response?.data))
+      if (tags.length === 0 || !tags) {
+        breakLoop = true
+      } else {
+        allTags = allTags.concat(tags)
+        page = page + 1
+      }
+    }
+    await _redis.set('tags', JSON.stringify(allTags))
+    res.status(200).send('success')
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
+// route GET api/redis/categories
+// @desc get the current tags from the redis store
+// @access public
+
+router.get('/redis/tags', async (req, res) => {
+  try {
+    const tags = await _redis.get('tags')
+    res.json(JSON.parse(tags))
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
 // route GET api/createProdsByCats
 // @desc creates and stores a list of each category of products
 // @access public
@@ -116,7 +159,8 @@ router.get('/redis/createProdsByCats', async (req, res) => {
 router.get('/redis/getProdsByCat/:cat', async (req, res) => {
   console.log(req.params)
   try {
-    const prodsByCat = await _redis.get(req.params.cat)
+    const cat = req.params.cat
+    const prodsByCat = await _redis.get(cat)
     res.status(200).send(prodsByCat ? JSON.parse(prodsByCat) : 'null')
   } catch (error) {
     console.log(error.response)
