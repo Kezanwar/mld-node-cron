@@ -58,7 +58,7 @@ router.get('/redis/products', async (req, res) => {
 
 router.get('/getCategories', async (req, res) => {
   try {
-    const response = await _wc.get('products/categories')
+    const response = await _wc.get('products/categories', { per_page: 100 })
     await _redis.set('categories', JSON.stringify(response.data))
     res.status(200).send('success')
   } catch (error) {
