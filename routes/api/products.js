@@ -113,11 +113,11 @@ router.get('/redis/createProdsByCats', async (req, res) => {
 // @desc gets categories from WC and stores them in redis
 // @access public
 
-router.get('api/redis/getProdsByCat/:cat', async (req, res) => {
+router.get('/redis/getProdsByCat/:cat', async (req, res) => {
+  console.log(req.params)
   try {
-    const response = await _wc.get('products/categories')
-    await _redis.set('categories', JSON.stringify(response.data))
-    res.status(200).send('success')
+    const prodsByCat = await _redis.get(req.params.cat)
+    res.status(200).send(prodsByCat ? JSON.parse(prodsByCat) : 'null')
   } catch (error) {
     console.log(error.response)
   }
