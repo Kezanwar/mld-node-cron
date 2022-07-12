@@ -3,6 +3,8 @@ const router = express.Router()
 const _wc = require('../../utilities/wc')
 const _redis = require('../../utilities/redis')
 const axios = require('axios')
+const sanitizeHtml = require('sanitize-html')
+// const e = require('express')
 
 // route GET api/getProducts
 // @desc gets all products from WC and stores them in redis
@@ -33,7 +35,7 @@ router.get('/getProducts', async (req, res) => {
     // })
 
     await _redis.set('products', JSON.stringify(allProducts))
-    res.status(200).send('success')
+    res.status(200).send(allProducts)
   } catch (error) {
     console.log(error.response.data)
   }
@@ -167,8 +169,8 @@ router.get('/redis/getProdsByCat/:cat', async (req, res) => {
   }
 })
 
-// route GET api/products/single?id=****
-// @desc get a specific product by ID
+// route GET api/single?id=****
+// @desc get a specific product by ID from WC
 // @access public
 
 router.get('/single?', async (req, res) => {
@@ -180,6 +182,95 @@ router.get('/single?', async (req, res) => {
     if (error?.response?.data?.message === 'Invalid ID.') {
       res.json("error, product doesn't exist")
     }
+  }
+})
+
+// route GET api/redis/single?id=****
+// @desc get a specific product by ID from Redis Cache
+// @access public
+
+router.get('/redis/single?', async (req, res) => {
+  const { id } = req.query
+  try {
+    let products = await _redis.get(`products`)
+    products = JSON.parse(products)
+    const prod = products.find((prod) => prod.id == id)
+    res.status(200).send(prod)
+  } catch (error) {
+    if (error?.response?.data?.message === 'Invalid ID.') {
+      res.json("error, product doesn't exist")
+    }
+  }
+})
+
+// route GET api/redis/single?id=****
+// @desc get a specific product by ID from Redis Cache
+// @access public
+
+router.get('/redis/price/single?', async (req, res) => {
+  const { id } = req.query
+  try {
+    let products = await _redis.get(`products`)
+    products = JSON.parse(products)
+    const prod = products.find((prod) => prod.id == id)
+    const regexp = /[\d\.]+/
+    const priceHTMLArr = prod.price_html.split('>')
+    let priceArr = []
+    priceHTMLArr.forEach((s) => priceArr.push(s.match(regexp)))
+    res.status(200).send(priceArr.filter((el) => el !== null))
+  } catch (error) {
+    if (error?.response?.data?.message === 'Invalid ID.') {
+      res.json("error, product doesn't exist")
+    }
+  }
+})
+
+// route GET /api/store-api/getProducts
+// @desc gets all products from store-api rather than wc api
+// @access public
+
+router.get('/store-api/getProducts', async (req, res) => {
+  try {
+    let allProducts = []
+    let breakLoop = false
+    let page = 1
+
+    while (!breakLoop) {
+      console.log(page)
+      const products = await axios
+        .get(
+          `${process.env.WC_URL}/wp-json/wc/store/v1/products?page=${page}&per_page=100`
+        )
+        .then((res) => res?.data)
+        .catch((err) => console.error(err))
+      if (products.length === 0 || !products) {
+        breakLoop = true
+      } else {
+        allProducts = allProducts.concat(products)
+        page = page + 1
+      }
+    }
+
+    allProducts.forEach((prod) => {
+      prod.short_description = sanitizeHtml(
+        prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
+        {
+          allowedTags: [],
+        }
+      )
+
+      prod.description = sanitizeHtml(
+        prod.description.replace(/(\r\n|\n|\r)/gm, ' '),
+        { allowedTags: [] }
+      )
+    })
+
+    await _redis.set('products', JSON.stringify(allProducts))
+
+    // console.log(allProducts)
+    res.send(allProducts)
+  } catch (error) {
+    res.json(error.response)
   }
 })
 
