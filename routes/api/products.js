@@ -33,7 +33,7 @@ router.get('/getProducts', async (req, res) => {
     // })
 
     await _redis.set('products', JSON.stringify(allProducts))
-    res.send(200)
+    res.status(200).send('success')
   } catch (error) {
     console.log(error.response.data)
   }
@@ -60,7 +60,7 @@ router.get('/getCategories', async (req, res) => {
   try {
     const response = await _wc.get('products/categories')
     await _redis.set('categories', JSON.stringify(response.data))
-    res.send(200)
+    res.status(200).send('success')
   } catch (error) {
     console.log(error.response)
   }
@@ -83,11 +83,41 @@ router.get('/redis/categories', async (req, res) => {
 // @desc creates and stores a list of each category of products
 // @access public
 
-router.get('/createProdsByCats', async (req, res) => {
+router.get('/redis/createProdsByCats', async (req, res) => {
   try {
-    const products = await _redis.get('products')
-    const categories = await _redis.get('products')
-    res.send(200)
+    let products = await _redis.get('products')
+    let categories = await _redis.get('categories')
+
+    products = JSON.parse(products)
+    categories = JSON.parse(categories)
+
+    categories.forEach(async (category) => {
+      const catAndProdObj = {
+        title: category.name,
+        id: category.id,
+        description: category.description,
+        products: products.filter((prod) =>
+          prod.categories.some((prodCat) => prodCat.id === category.id)
+        ),
+      }
+      await _redis.set(category.slug, JSON.stringify(catAndProdObj))
+    })
+
+    res.status(200).send('success')
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
+// route GET api/redis/getProdsByCat/:cat
+// @desc gets categories from WC and stores them in redis
+// @access public
+
+router.get('api/redis/getProdsByCat/:cat', async (req, res) => {
+  try {
+    const response = await _wc.get('products/categories')
+    await _redis.set('categories', JSON.stringify(response.data))
+    res.status(200).send('success')
   } catch (error) {
     console.log(error.response)
   }
