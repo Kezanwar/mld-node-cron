@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const _wc = require('../../utilities/wc')
-const _redis = require('../../utilities/redis')
+const _wc = require('../utilities/wc')
+const _redis = require('../utilities/redis')
 const axios = require('axios')
 const sanitizeHtml = require('sanitize-html')
 // const e = require('express')
@@ -10,7 +10,7 @@ const sanitizeHtml = require('sanitize-html')
 // @desc gets all products from WC and stores them in redis
 // @access public
 
-router.get('/getProducts', async (req, res) => {
+router.get('/wc-api/getProducts', async (req, res) => {
   try {
     let allProducts = []
     let breakLoop = false
@@ -58,7 +58,7 @@ router.get('/redis/products', async (req, res) => {
 // @desc gets categories from WC and stores them in redis
 // @access public
 
-router.get('/getCategories', async (req, res) => {
+router.get('/wc-api/getCategories', async (req, res) => {
   try {
     const response = await _wc.get('products/categories', { per_page: 100 })
     await _redis.set('categories', JSON.stringify(response.data))
@@ -258,7 +258,6 @@ router.get('/store-api/getProducts', async (req, res) => {
           allowedTags: [],
         }
       )
-
       prod.description = sanitizeHtml(
         prod.description.replace(/(\r\n|\n|\r)/gm, ' '),
         { allowedTags: [] }
@@ -267,7 +266,6 @@ router.get('/store-api/getProducts', async (req, res) => {
 
     await _redis.set('products', JSON.stringify(allProducts))
 
-    // console.log(allProducts)
     res.send(allProducts)
   } catch (error) {
     res.json(error.response)
