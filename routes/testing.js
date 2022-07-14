@@ -272,4 +272,44 @@ router.get('/store-api/getProducts', async (req, res) => {
   }
 })
 
+// route GET api/getStores
+// @desc gets all stores from Dokan
+// @access public
+
+router.get('/dokan-api/getStores', async (req, res) => {
+  try {
+    const reponse = await axios.get(
+      `${process.env.WC_URL}/wp-json/dokan/v1/stores`,
+      { per_page: 100 }
+    )
+    // await _redis.set('categories', JSON.stringify(response.data))
+    res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+// route GET api/getStores
+// @desc gets all stores from Dokan
+// @access public
+
+router.get('/dokan-api/getStore/:id', async (req, res) => {
+  try {
+    const id = req.params.id
+    const reponse = await axios.get(
+      `${process.env.WC_URL}/wp-json/dokan/v1/stores/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WP_JWT}`,
+        },
+      }
+      // { per_page: 100 }
+    )
+    // await _redis.set('categories', JSON.stringify(response.data))
+    res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
 module.exports = router

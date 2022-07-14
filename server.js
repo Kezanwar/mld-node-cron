@@ -14,7 +14,7 @@ app.get('/', (req, res) => res.send('mld cron server running'))
 // route used for testing purposes only
 
 if (process.env.ENVIRONMENT === 'test') {
-  app.use('/api', require('./routes/products'))
+  app.use('/api', require('./routes/testing'))
 }
 
 MLDScheduledCronJobs()
