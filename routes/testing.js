@@ -3,6 +3,7 @@ const router = express.Router()
 const _redis = require('../utilities/redis')
 const axios = require('axios')
 const sanitizeHtml = require('sanitize-html')
+const _wp = require('../utilities/wp')
 // const e = require('express')
 
 // route GET /api/store-api/getProducts
@@ -19,7 +20,7 @@ router.get('/store-api/getProducts', async (req, res) => {
       console.log(page)
       const products = await axios
         .get(
-          `${process.env.WC_URL}/wp-json/wc/store/v1/products?page=${page}&per_page=100`
+          `${_wp.URL}/wp-json/wc/store/v1/products?page=${page}&per_page=100`
         )
         .then((res) => res?.data)
         .catch((err) => console.error(err))
@@ -72,7 +73,7 @@ router.get('/redis/products', async (req, res) => {
 router.get('/store-api/getCategories', async (req, res) => {
   try {
     const response = await axios.get(
-      `${process.env.WC_URL}/wp-json/wc/store/v1/products/categories`
+      `${_wp.URL}/wp-json/wc/store/v1/products/categories`
     )
     await _redis.set('categories', JSON.stringify(response.data))
     res.status(200).send('success')
@@ -108,7 +109,7 @@ router.get('/store-api/getTags', async (req, res) => {
       console.log(page)
       const tags = await axios
         .get(
-          `${process.env.WC_URL}/wp-json/wc/store/v1/products/tags?page=${page}&per_page=100`
+          `${_wp.URL}/wp-json/wc/store/v1/products/tags?page=${page}&per_page=100`
         )
         .then((res) => res?.data)
         .catch((err) => console.log(err?.response?.data))
@@ -193,7 +194,7 @@ router.get('/store-api/single?', async (req, res) => {
   const { id } = req.query
   try {
     const response = await axios.get(
-      `${process.env.WC_URL}/wp-json/wc/store/v1/products/${id}`
+      `${_wp.URL}/wp-json/wc/store/v1/products/${id}`
     )
     res.send(response.data)
   } catch (error) {
@@ -249,16 +250,27 @@ router.get('/redis/price/single?', async (req, res) => {
 
 router.get('/dokan-api/getStores', async (req, res) => {
   try {
-    const reponse = await axios.get(
-      `${process.env.WC_URL}/wp-json/dokan/v1/stores`,
+    const response = await axios.get(
+      `${_wp.URL}/wp-json/dokan/v1/stores?per_page=100`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.WP_JWT}`,
-        },
+        headers: _wp.HEADERS(),
       }
     )
-    // await _redis.set('categories', JSON.stringify(response.data))
-    res.status(200).send(reponse.data)
+    await _redis.set('vendors', JSON.stringify(response.data))
+    res.status(200).send(response.data)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+// route GET api/redis/getStores
+// @desc gets all stores from Dokan
+// @access public
+
+router.get('/redis/getVendors', async (req, res) => {
+  try {
+    const vendors = await _redis.get('vendors')
+    res.status(200).send(JSON.parse(vendors))
   } catch (error) {
     console.log(error)
   }
@@ -272,11 +284,9 @@ router.get('/dokan-api/getStore/:id', async (req, res) => {
   try {
     const id = req.params.id
     const reponse = await axios.get(
-      `${process.env.WC_URL}/wp-json/dokan/v1/stores/${id}`,
+      `${_wp.URL}/wp-json/dokan/v1/stores/${id}`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.WP_JWT}`,
-        },
+        headers: _wp.HEADERS(),
       }
       // { per_page: 100 }
     )
@@ -294,11 +304,9 @@ router.get('/dokan-api/getStore/:id', async (req, res) => {
 router.get('/wp-api/getUsers', async (req, res) => {
   try {
     const reponse = await axios.get(
-      `${process.env.WC_URL}/wp-json/wp/v2/users?per_page=100`,
+      `${_wp.URL}/wp-json/wp/v2/users?per_page=100`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.WP_JWT}`,
-        },
+        headers: _wp.HEADERS(),
       }
     )
     // await _redis.set('users', JSON.stringify(response.data))
@@ -314,14 +322,9 @@ router.get('/wp-api/getUsers', async (req, res) => {
 
 router.get('/wc-api/getCustomers', async (req, res) => {
   try {
-    const reponse = await axios.get(
-      `${process.env.WC_URL}/wp-json/wc/v3/customers`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.WP_JWT}`,
-        },
-      }
-    )
+    const reponse = await axios.get(`${_wp.URL}/wp-json/wc/v3/customers`, {
+      headers: _wp.HEADERS(),
+    })
     // await _redis.set('users', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
   } catch (error) {
@@ -335,14 +338,9 @@ router.get('/wc-api/getCustomers', async (req, res) => {
 
 router.get('/wc-api/getOrders', async (req, res) => {
   try {
-    const reponse = await axios.get(
-      `${process.env.WC_URL}/wp-json/wc/v3/orders`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.WP_JWT}`,
-        },
-      }
-    )
+    const reponse = await axios.get(`${_wp.URL}/wp-json/wc/v3/orders`, {
+      headers: _wp.HEADERS(),
+    })
     // await _redis.set('users', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
   } catch (error) {
@@ -356,13 +354,10 @@ router.get('/wc-api/getOrders', async (req, res) => {
 
 router.get('/jwt-auth/getAdminToken', async (req, res) => {
   try {
-    const reponse = await axios.post(
-      `${process.env.WC_URL}/wp-json/jwt-auth/v1/token`,
-      {
-        username: process.env.WP_USERNAME,
-        password: process.env.WP_PASSWORD,
-      }
-    )
+    const reponse = await axios.post(`${_wp.URL}/wp-json/jwt-auth/v1/token`, {
+      username: process.env.WP_USERNAME,
+      password: process.env.WP_PASSWORD,
+    })
     // await _redis.set('users', JSON.stringify(response.data))
     res.status(200).send(JSON.stringify(reponse.data))
   } catch (error) {
