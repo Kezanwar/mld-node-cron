@@ -1,0 +1,3 @@
+Add getting all vendors into CRON
+Move get customer and other methods into MLD-NODE
+Create WC constants obj including a header for admin auth

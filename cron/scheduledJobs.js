@@ -2,6 +2,7 @@ const CronJob = require('node-cron')
 const _redis = require('../utilities/redis')
 const axios = require('axios')
 const sanitizeHtml = require('sanitize-html')
+const _wp = require('../utilities/wp')
 
 const cron2mins = '*/2 * * * *'
 const cron4mins = '*/4 * * * *'
@@ -23,7 +24,7 @@ const MLDScheduledCronJobs = () => {
         console.log('product page', prodPage)
         const wcProducts = await axios
           .get(
-            `${process.env.WC_URL}/wp-json/wc/store/v1/products?page=${prodPage}&per_page=100`
+            `${_wp.URL}/wp-json/wc/store/v1/products?page=${prodPage}&per_page=100`
           )
           .then((res) => res?.data)
           .catch((err) => console.error(err))
@@ -56,7 +57,7 @@ const MLDScheduledCronJobs = () => {
         console.log('tagsPage', tagsPage)
         const wcTags = await axios
           .get(
-            `${process.env.WC_URL}/wp-json/wc/store/v1/products/tags?page=${tagsPage}&per_page=100`
+            `${_wp.URL}/wp-json/wc/store/v1/products/tags?page=${tagsPage}&per_page=100`
           )
           .then((res) => res?.data)
           .catch((err) => console.log(err?.response?.data))
@@ -69,7 +70,7 @@ const MLDScheduledCronJobs = () => {
       }
 
       const categories = await axios.get(
-        `${process.env.WC_URL}/wp-json/wc/store/v1/products/categories`
+        `${_wp.URL}/wp-json/wc/store/v1/products/categories`
       )
       //   console.log(categories)
       categories.data.forEach(async (category) => {
@@ -84,6 +85,14 @@ const MLDScheduledCronJobs = () => {
         await _redis.set(category.slug, JSON.stringify(catAndProdObj))
       })
 
+      const vendors = await axios.get(
+        `${_wp.URL}/wp-json/dokan/v1/stores?per_page=100`,
+        {
+          headers: _wp.HEADERS(),
+        }
+      )
+
+      await _redis.set('vendors', JSON.stringify(vendors.data))
       await _redis.set('products', JSON.stringify(products))
       await _redis.set('categories', JSON.stringify(categories.data))
       await _redis.set('tags', JSON.stringify(tags))
