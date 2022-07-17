@@ -251,7 +251,11 @@ router.get('/dokan-api/getStores', async (req, res) => {
   try {
     const reponse = await axios.get(
       `${process.env.WC_URL}/wp-json/dokan/v1/stores`,
-      { per_page: 100 }
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WP_JWT}`,
+        },
+      }
     )
     // await _redis.set('categories', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
@@ -260,8 +264,8 @@ router.get('/dokan-api/getStores', async (req, res) => {
   }
 })
 
-// route GET api/getStores
-// @desc gets all stores from Dokan
+// route GET api/getStore/:id
+// @desc gets a single store from Dokan by id
 // @access public
 
 router.get('/dokan-api/getStore/:id', async (req, res) => {
@@ -278,6 +282,89 @@ router.get('/dokan-api/getStore/:id', async (req, res) => {
     )
     // await _redis.set('categories', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+// route GET wp-api/getUsers
+// @desc gets all users from wp api
+// @access public
+
+router.get('/wp-api/getUsers', async (req, res) => {
+  try {
+    const reponse = await axios.get(
+      `${process.env.WC_URL}/wp-json/wp/v2/users?per_page=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WP_JWT}`,
+        },
+      }
+    )
+    // await _redis.set('users', JSON.stringify(response.data))
+    res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
+// route GET wc-api/getCustomers
+// @desc gets all orders from wc-api
+// @access public
+
+router.get('/wc-api/getCustomers', async (req, res) => {
+  try {
+    const reponse = await axios.get(
+      `${process.env.WC_URL}/wp-json/wc/v3/customers`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WP_JWT}`,
+        },
+      }
+    )
+    // await _redis.set('users', JSON.stringify(response.data))
+    res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
+// route GET wc-api/getOrders
+// @desc gets all orders from wc-api
+// @access public
+
+router.get('/wc-api/getOrders', async (req, res) => {
+  try {
+    const reponse = await axios.get(
+      `${process.env.WC_URL}/wp-json/wc/v3/orders`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WP_JWT}`,
+        },
+      }
+    )
+    // await _redis.set('users', JSON.stringify(response.data))
+    res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error.response)
+  }
+})
+
+// route GET jwt-auth/getAdminToken
+// @desc gets all orders from wc-api
+// @access public
+
+router.get('/jwt-auth/getAdminToken', async (req, res) => {
+  try {
+    const reponse = await axios.post(
+      `${process.env.WC_URL}/wp-json/jwt-auth/v1/token`,
+      {
+        username: process.env.WP_USERNAME,
+        password: process.env.WP_PASSWORD,
+      }
+    )
+    // await _redis.set('users', JSON.stringify(response.data))
+    res.status(200).send(JSON.stringify(reponse.data))
   } catch (error) {
     console.log(error)
   }
