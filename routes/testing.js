@@ -52,6 +52,52 @@ router.get('/store-api/getProducts', async (req, res) => {
     res.json(error.response)
   }
 })
+// route GET /api/wc-api/getProducts
+// @desc gets all products from store-api rather than wc api
+// @access public
+
+router.get('/wc-api/getProducts', async (req, res) => {
+  try {
+    let allProducts = []
+    let breakLoop = false
+    let page = 1
+
+    while (!breakLoop) {
+      console.log(page)
+      const products = await axios
+        .get(`${_wp.URL}/wp-json/wc/v3/products?page=${page}&per_page=100`, {
+          headers: _wp.HEADERS,
+        })
+        .then((res) => res?.data)
+        .catch((err) => console.error(err))
+      if (products.length === 0 || !products) {
+        breakLoop = true
+      } else {
+        allProducts = allProducts.concat(products)
+        page = page + 1
+      }
+    }
+
+    allProducts.forEach((prod) => {
+      prod.short_description = sanitizeHtml(
+        prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
+        {
+          allowedTags: [],
+        }
+      )
+      prod.description = sanitizeHtml(
+        prod.description.replace(/(\r\n|\n|\r)/gm, ' '),
+        { allowedTags: [] }
+      )
+    })
+
+    // await _redis.set('products', JSON.stringify(allProducts))
+
+    res.send(allProducts)
+  } catch (error) {
+    res.json(error.response)
+  }
+})
 
 // route GET api/redis/products
 // @desc get the current products from the redis store
@@ -253,7 +299,7 @@ router.get('/dokan-api/getStores', async (req, res) => {
     const response = await axios.get(
       `${_wp.URL}/wp-json/dokan/v1/stores?per_page=100`,
       {
-        headers: _wp.HEADERS(),
+        headers: _wp.HEADERS,
       }
     )
     await _redis.set('vendors', JSON.stringify(response.data))
@@ -286,12 +332,28 @@ router.get('/dokan-api/getStore/:id', async (req, res) => {
     const reponse = await axios.get(
       `${_wp.URL}/wp-json/dokan/v1/stores/${id}`,
       {
-        headers: _wp.HEADERS(),
+        headers: _wp.HEADERS,
       }
       // { per_page: 100 }
     )
     // await _redis.set('categories', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
+  } catch (error) {
+    console.log(error)
+  }
+})
+
+// route GET api/redis/getVendorByid
+// @desc gets all stores from Dokan
+// @access public
+
+router.get('/redis/getVendorById/:id', async (req, res) => {
+  try {
+    let vendors = await _redis.get('vendors')
+    const id = req.params.id
+    vendors = JSON.parse(vendors)
+    const vendor = vendors.find((v) => id === v.id)
+    res.status(200).send(vendor)
   } catch (error) {
     console.log(error)
   }
@@ -306,7 +368,7 @@ router.get('/wp-api/getUsers', async (req, res) => {
     const reponse = await axios.get(
       `${_wp.URL}/wp-json/wp/v2/users?per_page=100`,
       {
-        headers: _wp.HEADERS(),
+        headers: _wp.HEADERS,
       }
     )
     // await _redis.set('users', JSON.stringify(response.data))
@@ -323,7 +385,7 @@ router.get('/wp-api/getUsers', async (req, res) => {
 router.get('/wc-api/getCustomers', async (req, res) => {
   try {
     const reponse = await axios.get(`${_wp.URL}/wp-json/wc/v3/customers`, {
-      headers: _wp.HEADERS(),
+      headers: _wp.HEADERS,
     })
     // await _redis.set('users', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
@@ -339,7 +401,7 @@ router.get('/wc-api/getCustomers', async (req, res) => {
 router.get('/wc-api/getOrders', async (req, res) => {
   try {
     const reponse = await axios.get(`${_wp.URL}/wp-json/wc/v3/orders`, {
-      headers: _wp.HEADERS(),
+      headers: _wp.HEADERS,
     })
     // await _redis.set('users', JSON.stringify(response.data))
     res.status(200).send(reponse.data)
