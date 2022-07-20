@@ -135,6 +135,7 @@ const MLDScheduledCronJobs = () => {
           const prodsVendor = vendors.find((v) => v.id === p.store.id)
           // console.log(prodsVendor)
           if (!prodsVendor || prodsVendor.enabled === false) return null
+          // add more product sanitization here
           else return p
         })
         .filter((p) => p !== null)
@@ -196,6 +197,7 @@ const MLDScheduledCronJobs = () => {
         const sanitizedVendsProds = vendsProds.map((p) => {
           const prodObj = { ...p }
           delete prodObj.store
+          delete prodObj.permalink
           return prodObj
         })
 
