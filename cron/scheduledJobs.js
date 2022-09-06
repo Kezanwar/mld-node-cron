@@ -3,6 +3,8 @@ const _redis = require('../utilities/redis')
 const axios = require('axios')
 const sanitizeHtml = require('sanitize-html')
 const _wp = require('../utilities/wp')
+const html_entities = require('html-entities')
+const { decode } = html_entities
 
 const cron2mins = '*/2 * * * *'
 const cron4mins = '*/4 * * * *'
@@ -105,6 +107,9 @@ const MLDScheduledCronJobs = () => {
       // ---- sanitize the html from products descriptions and attatch the correct vendor to the prod obj
 
       storeProducts.forEach((prod) => {
+        // console.log(prod.name)
+        prod.name = decode(prod.name)
+        // console.log(prod.name)
         prod.short_description = sanitizeHtml(
           prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
           {
