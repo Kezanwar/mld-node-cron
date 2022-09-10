@@ -109,6 +109,9 @@ const MLDScheduledCronJobs = () => {
       storeProducts.forEach((prod) => {
         // console.log(prod.name)
         prod.name = decode(prod.name)
+        prod.categories.forEach((c) => {
+          c.name = decode(c.name)
+        })
         // console.log(prod.name)
         prod.short_description = sanitizeHtml(
           prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
@@ -207,6 +210,11 @@ const MLDScheduledCronJobs = () => {
         })
 
         vendor.products = sanitizedVendsProds
+
+        vendor.categories.forEach((c) => {
+          c.name = decode(c.name)
+          console.log(c.name)
+        })
       })
 
       // ---- setting items to redis
