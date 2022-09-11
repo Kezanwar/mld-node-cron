@@ -181,14 +181,18 @@ const MLDScheduledCronJobs = () => {
       // ---- creating an obj for each category with products attached and setting to redis
 
       categories.data.forEach(async (category) => {
+        category.svg = PRODUCT_CATEGORY_SVGS[
+          parseDashStrToUnderScoreStr(category.slug)
+        ]
+          ? PRODUCT_CATEGORY_SVGS[parseDashStrToUnderScoreStr(category.slug)]
+          : ''
+
         const catAndProdObj = {
           title: category.name,
           id: category.id,
           description: category.description,
           slug: category.slug,
-          svg: PRODUCT_CATEGORY_SVGS[parseDashStrToUnderScoreStr(category.slug)]
-            ? PRODUCT_CATEGORY_SVGS[parseDashStrToUnderScoreStr(category.slug)]
-            : '',
+          svg: category.svg,
           products: storeProducts.filter((prod) =>
             prod.categories.some((prodCat) => prodCat.id === category.id)
           ),
