@@ -4,6 +4,8 @@ const axios = require('axios')
 const sanitizeHtml = require('sanitize-html')
 const _wp = require('../utilities/wp')
 const html_entities = require('html-entities')
+const { parseDashStrToUnderScoreStr } = require('../utilities/utilities')
+const { PRODUCT_CATEGORY_SVGS } = require('../utilities/media')
 const { decode } = html_entities
 
 const cron2mins = '*/2 * * * *'
@@ -107,12 +109,11 @@ const MLDScheduledCronJobs = () => {
       // ---- sanitize the html from products descriptions and attatch the correct vendor to the prod obj
 
       storeProducts.forEach((prod) => {
-        // console.log(prod.name)
         prod.name = decode(prod.name)
         prod.categories.forEach((c) => {
           c.name = decode(c.name)
         })
-        // console.log(prod.name)
+
         prod.short_description = sanitizeHtml(
           prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
           {
@@ -180,10 +181,18 @@ const MLDScheduledCronJobs = () => {
       // ---- creating an obj for each category with products attached and setting to redis
 
       categories.data.forEach(async (category) => {
+        category.svg = PRODUCT_CATEGORY_SVGS[
+          parseDashStrToUnderScoreStr(category.slug)
+        ]
+          ? PRODUCT_CATEGORY_SVGS[parseDashStrToUnderScoreStr(category.slug)]
+          : ''
+
         const catAndProdObj = {
           title: category.name,
           id: category.id,
           description: category.description,
+          slug: category.slug,
+          svg: category.svg,
           products: storeProducts.filter((prod) =>
             prod.categories.some((prodCat) => prodCat.id === category.id)
           ),
@@ -213,7 +222,6 @@ const MLDScheduledCronJobs = () => {
 
         vendor.categories.forEach((c) => {
           c.name = decode(c.name)
-          console.log(c.name)
         })
       })
 
