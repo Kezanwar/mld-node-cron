@@ -187,6 +187,8 @@ const MLDScheduledCronJobs = () => {
           ? PRODUCT_CATEGORY_SVGS[parseDashStrToUnderScoreStr(category.slug)]
           : ''
 
+        category.name = decode(category.name)
+
         const catAndProdObj = {
           title: category.name,
           id: category.id,
