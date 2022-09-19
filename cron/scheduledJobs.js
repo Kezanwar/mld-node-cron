@@ -114,6 +114,8 @@ const MLDScheduledCronJobs = () => {
           c.name = decode(c.name)
         })
 
+        prod.images = prod.images.map((i) => i.src)
+
         prod.short_description = sanitizeHtml(
           prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
           {
