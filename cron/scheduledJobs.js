@@ -6,8 +6,10 @@ const _wp = require('../utilities/wp')
 const html_entities = require('html-entities')
 const { parseDashStrToUnderScoreStr } = require('../utilities/utilities')
 const { PRODUCT_CATEGORY_SVGS } = require('../utilities/media')
+const { Product } = require('../utilities/classes')
 const { decode } = html_entities
 
+const cron1mins = '*/1 * * * *'
 const cron2mins = '*/2 * * * *'
 const cron4mins = '*/4 * * * *'
 const cron5mins = '*/5 * * * *'
@@ -108,7 +110,7 @@ const MLDScheduledCronJobs = () => {
 
       // ---- sanitize the html from products descriptions and attatch the correct vendor to the prod obj
 
-      storeProducts.forEach((prod) => {
+      storeProducts.forEach(async (prod) => {
         prod.name = decode(prod.name)
         prod.categories.forEach((c) => {
           c.name = decode(c.name)
@@ -126,6 +128,7 @@ const MLDScheduledCronJobs = () => {
           prod.description.replace(/(\r\n|\n|\r)/gm, ' '),
           { allowedTags: [] }
         )
+
         const wcApiThisProd = wcProducts.find((wcProd) => prod.id === wcProd.id)
         const vendorThisProd = vendors.find(
           (v) => v.id === wcApiThisProd.store.id
@@ -150,6 +153,22 @@ const MLDScheduledCronJobs = () => {
           else return p
         })
         .filter((p) => p !== null)
+
+      // for of loop to executr
+      for (const prod of storeProducts) {
+        if (prod.has_options && !!prod.variations)
+          await axios
+            .get(`${_wp.URL}/wp-json/wc/v3/products/${prod.id}/variations`, {
+              headers: _wp.HEADERS,
+            })
+            .then((res) => {
+              prod.variations = res.data
+              console.log('v')
+            })
+            .catch((err) => {
+              console.error('error!', err)
+            })
+      }
 
       // ---- get all tags
 
@@ -228,6 +247,8 @@ const MLDScheduledCronJobs = () => {
           c.name = decode(c.name)
         })
       })
+      const fff = new Product(storeProducts[0])
+      console.log(fff)
 
       // ---- setting items to redis
 
