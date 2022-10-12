@@ -121,7 +121,10 @@ const MLDScheduledCronJobs = () => {
         prod.short_description = sanitizeHtml(
           prod.short_description.replace(/(\r\n|\n|\r)/gm, ' '),
           {
-            allowedTags: [],
+            allowedTags: ['p'],
+            exclusiveFilter: function (frame) {
+              return frame.tag === 'p' && !frame.text.trim()
+            },
           }
         )
         prod.description = sanitizeHtml(
@@ -247,8 +250,6 @@ const MLDScheduledCronJobs = () => {
           c.name = decode(c.name)
         })
       })
-      const fff = new Product(storeProducts[0])
-      console.log(fff)
 
       // ---- setting items to redis
 
